@@ -1,12 +1,18 @@
 import numpy as np
+import pymysql
+
+db = pymysql.connect("localhost:3306","root","root","cwb_bd")
+cursor = db.cursor()
 
 def get_municipio():
-   return np.random.randint(68)
+   return np.random.randint(1, size=88)
 
 def battle():
   id_x = get_municipio();
-#TODO: Extraer en la BBDD propietario del municipio con este id
-  prop_x = 1
+  sql = "SELECT id_propietario from municipios where id_municipio = {0}".format(id_x)
+  cursor.execute(sql)
+
+  prop_x=cursor.fetchall()
   if id_x == prop_x :
     create_conquest(prop_x,id_x)
   else:
@@ -14,13 +20,18 @@ def battle():
 
 
 def create_conquest(prop_x,id_x):
-  prop_y=get_frontera(prop_x,id_x)
+  id_y=get_frontera(prop_x,id_x)
   #TODO: buscar en la bbdd la probabilidad de éxito de municipio x
-  prob_x = 0.1
+  prob_x = 0.3+0.3
   #TODO: algoritmo de éxito
   succes = 0
   if succes:
-    #TODO: cambiar en la bbdd propietario prop_y = prop_x
+    sql = "UPDATE municipios SET id_propietario = {0} WHERE id_municipio={1}".format(prop_x, id_y)
+    try:
+      cursor.execute(sql)
+      db.commit()
+    except:
+      db.rollback()
 
 
 def create_revellion(prop_x,id_x):
@@ -34,8 +45,9 @@ def create_revellion(prop_x,id_x):
     create_conquest(prop_x,id_x)
 
 def get_frontera(prop_x,id_x):
-  #TODO: buscar en la base de datos las fronteras de id_x
-  fronteras = "3,4,5"
+  sql = "SELECT fronteras from municipios where id_municipio = {0}".format(id_x)
+  cursor.execute(sql)
+  fronteras = cursor.fetchall()
   array_fronteras = fronteras.split(',')
   n_random = np.random.randint(len(array_fronteras))
   res = 404
@@ -43,10 +55,12 @@ def get_frontera(prop_x,id_x):
   i=0
   while i<len(array_fronteras):
     frontera_y = array_fronteras[n_random+i]
-    #TODO: buscar en la BD el propietario de Y
-    prop_y =4
+    sql = "SELECT id_propietario from municipios where id_municipio = {0}".format(frontera_y)
+    cursor.execute(sql)
+    prop_y = cursor.fetchall()
+
     if prop_y != prop_x:
-      res = prop_y
+      res = frontera_y
       break
     i+=1
   return res
